@@ -1,0 +1,9 @@
+@define-color primary @color10;
+@define-color secondary @color14;
+@define-color tertiary @color11;
+
+@define-color surface @background;
+@define-color surface_container_highest @color8;
+
+@define-color on_surface @foreground;
+@define-color error @color9;

@@ -1,0 +1,16 @@
+
+[config]
+
+
+[templates.waybar]
+input_path = "~/.config/matugen/templates/waybar-colors.css"
+output_path = "~/.config/waybar/colors/colors.css"
+
+[templates.vscode]
+input_path = '~/.config/matugen/templates/vscode_oss.json'
+output_path = '~/.config/Code - OSS/User/settings.json'
+
+[templates.kitty]
+input_path = '~/.config/matugen/templates/kitty.conf'
+output_path = '~/.config/kitty/theme.conf'
+post_hook = 'kill -USR1 $(pidof kitty)'

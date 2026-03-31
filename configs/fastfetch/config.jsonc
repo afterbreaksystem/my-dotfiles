@@ -1,0 +1,63 @@
+{
+    "$schema": "https://github.com",
+    "logo": {
+        "source": "~/.local/share/fastfetch/ascii/arch.txt",
+        "width": 1,
+        "padding": {
+            "top": 3,
+            "right": 6
+        }
+    },
+    "display": {
+        "separator": " "
+    },
+    "modules": [
+        "break",
+        "break",
+        {
+            "type": "title",
+            "keyWidth": 10
+        },
+        "break",
+        {
+            "type": "os",
+            "key": " ",
+            "keyColor": "33"
+        },
+        {
+            "type": "kernel",
+            "key": " ",
+            "keyColor": "33"
+        },
+        {
+            "type": "packages",
+            "format": "{} (pacman)",
+            "key": " ",
+            "keyColor": "33"
+        },
+        {
+            "type": "shell",
+            "key": " ",
+            "keyColor": "33"
+        },
+        {
+            "type": "terminal",
+            "key": " ",
+            "keyColor": "33"
+        },
+        {
+            "type": "wm",
+            "key": " ",
+            "keyColor": "33"
+        },
+        {
+            "type": "uptime",
+            "key": " ",
+            "keyColor": "33"
+        },
+        "break",
+        "colors",
+        "break",
+        "break"
+    ]
+}

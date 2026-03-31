@@ -1,0 +1,89 @@
+# --- Основное ---
+
+# $mainMod, Q, exec, $terminal
+super + q
+	kitty
+
+# $mainMod, C, killactive
+super + c
+	bspc node -c
+
+# $mainMod, E, exec, $fileManager
+super + e
+	thunar
+
+# $mainMod, V, togglefloating
+super + v
+	bspc node -t ~floating
+
+# $mainMod, R, exec, $menu
+super + r
+	rofi -show drun
+
+# $mainMod, F, fullscreen
+super + f
+	bspc node -t fullscreen
+
+# $mainMod, L, exec, $wlogout
+super + l
+	wlogout
+
+# $mainMod, O, exec, $hyprshot (используем maim для X11)
+super + o
+	maim -s | xclip -selection clipboard -t image/png
+
+# $mainMod, M, exit (Hyprland exit -> bspwm quit)
+super + m
+	bspc quit
+
+# $mainMod, P, pseudo
+super + p
+	bspc node -t pseudo_tiled
+
+# $mainMod, J, togglesplit (вращение схемы в bspwm)
+super + j
+	bspc node -rotate 90
+
+# --- Навигация (Стрелки) ---
+
+# Move focus with mainMod + arrow keys
+super + {Left,Down,Up,Right}
+	bspc node -f {west,south,north,east}
+
+# --- Воркспейсы ---
+
+# Switch workspaces with mainMod + [0-9]
+super + {1-9,0}
+	bspc desktop -f '^{1-9,10}'
+
+# Move active window to a workspace with mainMod + SHIFT + [0-9]
+super + shift + {1-9,0}
+	bspc node -d '^{1-9,10}'
+
+# --- Мультимедиа ---
+
+XF86AudioRaiseVolume
+	wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 5%+
+
+XF86AudioLowerVolume
+	wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-
+
+XF86AudioMute
+	wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle
+
+XF86AudioMicMute
+	wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle
+
+XF86MonBrightnessUp
+	brightnessctl -e4 -n2 set 5%+
+
+XF86MonBrightnessDown
+	brightnessctl -e4 -n2 set 5%-
+
+XF86Audio{Next,Pause,Play,Prev}
+	playerctl {next,play-pause,play-pause,previous}
+
+# --- sxhkd system ---
+
+super + Escape
+	pkill -USR1 -x sxhkd

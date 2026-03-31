@@ -1,0 +1,52 @@
+@import "colors.css";
+window {
+    background-color: @bg;
+    font-family: "JetBrainsMono Nerd Font", "JetBrains Mono", monospace;
+}
+
+button {
+    margin: 15px;
+    border-radius: 16px;
+    border: 2px solid @button-border;
+    background-color: @button-bg;
+    color: @text;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 35%;
+    transition: all 0.4s cubic-bezier(.15,.85,.35,1);
+    box-shadow: none;
+    text-shadow: none;
+    font-size: 22px;
+    min-width: 200px;
+    min-height: 200px;
+}
+
+button:hover {
+    background-color: @hover-bg;
+    border-color: @hover-border;
+    color: @hover-text;
+}
+
+button:active {
+    background-color: @active-bg;
+    border-color: @active-border;
+    color: @active-text;
+}
+
+
+#lock {
+    background-image: image(url("icons/lock.png"));
+}
+
+#shutdown {
+    background-image: image(url("icons/shutdown.png"));
+}
+
+#reboot {
+    background-image: image(url("icons/reboot.png"));
+}
+
+#suspend {
+    background-image: image(url("icons/suspend.png"));
+}
+

@@ -1,0 +1,40 @@
+[directory]
+truncation_symbol = "…/"
+
+[directory.substitutions]
+"Documents" = "📂 "
+"Downloads" = " "
+"Music" = " "
+"Pictures" = " "
+
+[git_branch]
+symbol = ""
+format = "$symbol $branch "
+
+[git_status]
+format = "$all_status$ahead_behind "
+
+[nodejs]
+symbol = ""
+format = "$symbol ($version) "
+
+[rust]
+symbol = ""
+format = "$symbol ($version) "
+
+[golang]
+symbol = ""
+format = "$symbol ($version) "
+
+[php]
+symbol = ""
+format = "$symbol ($version) "
+
+[time]
+disabled = true
+time_format = "%R"
+format = " $time "
+
+[character]
+success_symbol = "❯ "
+error_symbol = "❯ "
