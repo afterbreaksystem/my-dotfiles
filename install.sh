@@ -1,57 +1,65 @@
 #!/bin/bash
 # =============================================================
-#  install.sh — разворачивает райс после переустановки Arch
-#  Запусти сразу после базовой установки Arch + рабочего интернета:
+#  install.sh — deploy rice after a fresh Arch Linux install
+#  Run right after base install with working internet:
 #  bash install.sh
 # =============================================================
 set -e
 
 DOTDIR="$(cd "$(dirname "$0")" && pwd)"
+CURRENT_USER="$(whoami)"
+CURRENT_HOME="$HOME"
 
 echo "╔══════════════════════════════════════╗"
 echo "║       INSTALL RICE + DRIVERS         ║"
 echo "╚══════════════════════════════════════╝"
 echo ""
-echo "Текущий пользователь: $(whoami)"
-echo "Домашняя папка:       $HOME"
+echo "Current user: $CURRENT_USER"
+echo "Home folder:  $CURRENT_HOME"
 echo ""
-read -rp "Всё верно? Продолжить установку? [y/N]: " confirm
+read -rp "Is this correct? Continue installation? [y/N]: " confirm
 if [[ "$confirm" != "y" && "$confirm" != "Y" ]]; then
-    echo "Отменено. Залогинься под нужным пользователем и запусти снова."
+    echo "Cancelled. Log in as the correct user and run again."
     exit 1
 fi
 
-# ── 1. Базовые зависимости ───────────────────────────────────
+# ── 1. Base dependencies + multilib ──────────────────────────
 echo ""
-echo "==> [1/5] Базовые пакеты..."
+echo "==> [1/6] Base packages..."
 sudo pacman -Sy --needed --noconfirm git base-devel
 
-# ── 2. NVIDIA драйверы (КРИТИЧНО — в первую очередь) ─────────
-echo ""
-echo "==> [2/5] NVIDIA драйверы (nvidia-580xx-dkms)..."
-echo "    Это AUR пакет, сначала ставим yay..."
+if ! grep -q "^\[multilib\]" /etc/pacman.conf; then
+    sudo sed -i 's/^#\[multilib\]/[multilib]/' /etc/pacman.conf
+    sudo sed -i '/^\[multilib\]/{n;s/^#//}' /etc/pacman.conf
+    sudo pacman -Sy
+    echo "    ✓ multilib enabled"
+fi
 
+# ── 2. Install yay ───────────────────────────────────────────
+echo ""
+echo "==> [2/6] Installing yay..."
 if ! command -v yay &>/dev/null; then
     git clone https://aur.archlinux.org/yay-bin.git /tmp/yay-bin
     cd /tmp/yay-bin && makepkg -si --noconfirm && cd "$DOTDIR"
-    echo "    ✓ yay установлен"
+    echo "    ✓ yay installed"
+else
+    echo "    ✓ yay already installed"
 fi
 
-echo "    Устанавливаем nvidia-580xx-dkms + утилиты..."
+# ── 3. NVIDIA drivers ────────────────────────────────────────
+echo ""
+echo "==> [3/6] NVIDIA drivers (nvidia-580xx-dkms)..."
 yay -S --needed --noconfirm \
     nvidia-580xx-dkms \
     nvidia-580xx-utils \
     lib32-nvidia-580xx-utils
 
-echo "    ✓ NVIDIA драйверы установлены"
-echo ""
-echo "    ⚠ Не забудь после установки:"
-echo "      - Добавить nvidia_drm.modeset=1 в параметры ядра (grub)"
-echo "      - Добавить nvidia nvidia_modeset nvidia_uvm nvidia_drm в initramfs"
+echo "    ✓ NVIDIA drivers installed"
+echo "    ⚠ Remember: add nvidia_drm.modeset=1 to GRUB and nvidia modules to mkinitcpio"
 
-# ── 3. Ядро Hyprland и зависимости райса ─────────────────────
+# ── 4. Hyprland + rice dependencies ─────────────────────────
 echo ""
-echo "==> [3/5] Hyprland + зависимости райса..."
+echo "==> [4/6] Hyprland + rice dependencies..."
 sudo pacman -S --needed --noconfirm \
     hyprland \
     hyprlock \
@@ -64,7 +72,6 @@ sudo pacman -S --needed --noconfirm \
     uwsm \
     waybar \
     swaync \
-    wlogout \
     rofi \
     kitty \
     sddm \
@@ -73,9 +80,7 @@ sudo pacman -S --needed --noconfirm \
     wireplumber \
     fish \
     neovim \
-    btop \
     fastfetch \
-    cava \
     grim \
     slurp \
     satty \
@@ -92,9 +97,9 @@ sudo pacman -S --needed --noconfirm \
     udisks2 \
     polkit-kde-agent \
     nwg-look \
-    matugen \
     python-pip \
-    python-pipx \
+    imagemagick \
+    starship \
     ttf-jetbrains-mono \
     ttf-jetbrains-mono-nerd \
     ttf-iosevka-nerd \
@@ -102,18 +107,20 @@ sudo pacman -S --needed --noconfirm \
     noto-fonts-cjk \
     flatpak \
     cpupower \
-    gamemode
+    gamemode \
+    linux-headers
 
-echo "    ✓ Основные пакеты установлены"
+echo "    ✓ Main packages installed"
 
-# ── 4. AUR пакеты райса ──────────────────────────────────────
+# ── 5. AUR packages ──────────────────────────────────────────
 echo ""
-echo "==> [4/5] AUR пакеты райса..."
+echo "==> [5/6] AUR packages..."
 yay -S --needed --noconfirm \
     awww \
     walrs \
     bibata-cursor-theme-bin \
     wlogout \
+    nvibrant-cli \
     ttf-all-the-icons \
     ttf-material-design-icons-desktop-git \
     ttf-material-design-icons-git \
@@ -124,12 +131,29 @@ yay -S --needed --noconfirm \
     pipes.sh \
     apple-fonts
 
-echo "    ✓ AUR пакеты установлены"
+echo "    ✓ AUR packages installed"
 
-# ── 5. Раскладываем конфиги ──────────────────────────────────
 echo ""
-echo "==> [5/5] Раскладываем конфиги..."
-mkdir -p "$HOME/.config"
+echo "==> Building hyprselect from GitHub..."
+sudo pacman -S --needed --noconfirm cmake
+git clone https://github.com/noe-flat/hyprselect.git "$CURRENT_HOME/hyprselect"
+cd "$CURRENT_HOME/hyprselect"
+cmake -B build
+cmake --build build
+sudo cmake --install build
+cd "$DOTDIR"
+echo "    ✓ hyprselect built (source kept in $CURRENT_HOME/hyprselect)"
+
+echo ""
+echo "==> Installing pywal16..."
+pip install pywal16 --break-system-packages
+export PATH="$CURRENT_HOME/.local/bin:$PATH"
+echo "    ✓ pywal16 installed"
+
+# ── 6. Deploy configs ────────────────────────────────────────
+echo ""
+echo "==> [6/6] Deploying configs..."
+mkdir -p "$CURRENT_HOME/.config"
 
 RICE_CONFIGS=(
     hypr
@@ -141,25 +165,20 @@ RICE_CONFIGS=(
     fish
     wlogout
     walrs
-    matugen
     fastfetch
-    btop
-    cava
-    eww
-    quickshell
-    wofi
-    sxhkd
     nwg-look
     gtk-3.0
     gtk-4.0
+    sxhkd
+    wal
 )
 
 for cfg in "${RICE_CONFIGS[@]}"; do
     src="$DOTDIR/configs/$cfg"
-    dst="$HOME/.config/$cfg"
+    dst="$CURRENT_HOME/.config/$cfg"
     if [ -d "$src" ]; then
         if [ -d "$dst" ]; then
-            echo "    ! $cfg уже существует — пропускаем"
+            echo "    ! $cfg already exists — skipping"
         else
             cp -r "$src" "$dst"
             echo "    ✓ $cfg"
@@ -167,39 +186,68 @@ for cfg in "${RICE_CONFIGS[@]}"; do
     fi
 done
 
-# starship.toml
 if [ -f "$DOTDIR/configs/starship.toml" ]; then
-    cp "$DOTDIR/configs/starship.toml" "$HOME/.config/starship.toml"
+    cp "$DOTDIR/configs/starship.toml" "$CURRENT_HOME/.config/starship.toml"
     echo "    ✓ starship.toml"
 fi
 
-# Обои
 if [ -d "$DOTDIR/wallpapers" ]; then
-    cp -r "$DOTDIR/wallpapers" "$HOME/wallpapers"
+    cp -r "$DOTDIR/wallpapers" "$CURRENT_HOME/wallpapers"
     echo "    ✓ wallpapers"
 fi
 
-# ── Shell → fish ─────────────────────────────────────────────
+# ── Fix username paths ───────────────────────────────────────
 echo ""
-echo "==> Меняем shell на fish..."
+echo "==> Fixing username paths in configs..."
+bash "$DOTDIR/fix-username.sh"
+
+# ── Rofi theme ───────────────────────────────────────────────
+echo ""
+echo "==> Setting up rofi theme..."
+git clone https://github.com/newmanls/rofi-themes-collection.git /tmp/rofi-themes
+sudo mkdir -p /usr/share/rofi/themes/template
+sudo cp -r /tmp/rofi-themes/themes/. /usr/share/rofi/themes/
+
+curl -s https://raw.githubusercontent.com/newmanls/rofi-themes-collection/master/themes/template/rounded-template.rasi \
+    -o /tmp/rounded-template-orig.rasi
+
+sudo bash -c "{ echo '@import \"$CURRENT_HOME/.cache/wal/colors-rofi-dark.rasi\"'
+echo '* {'
+echo '    bg0: @background;'
+echo '    bg1: @color0;'
+echo '    bg2: @color1;'
+echo '    bg3: @color2;'
+echo '    fg0: @foreground;'
+echo '    fg1: @color7;'
+echo '    fg2: @color8;'
+echo '    fg3: @color1;'
+echo '}'
+cat /tmp/rounded-template-orig.rasi; } > /usr/share/rofi/themes/template/rounded-template.rasi"
+
+sudo cp /usr/share/rofi/themes/template/rounded-template.rasi /usr/share/rofi/themes/rounded-template.rasi
+sudo mkdir -p /root/.config/rofi
+sudo cp -r "$CURRENT_HOME/.config/rofi/." /root/.config/rofi/
+echo "    ✓ rofi theme installed"
+
+# ── Shell + services ─────────────────────────────────────────
+echo ""
+echo "==> Changing shell to fish..."
 chsh -s "$(which fish)"
 
-# ── Включаем сервисы ─────────────────────────────────────────
 echo ""
-echo "==> Включаем сервисы..."
+echo "==> Enabling services..."
 sudo systemctl enable NetworkManager
 sudo systemctl enable sddm
 sudo systemctl enable cpupower
-echo "    ✓ Сервисы включены"
+echo "    ✓ Services enabled"
 
-# ── Итог ────────────────────────────────────────────────────
 echo ""
-echo "╔══════════════════════════════════════════════════════╗"
-echo "║  ВСЁ ГОТОВО!                                         ║"
-echo "║                                                      ║"
-echo "║  Что сделать вручную после перезагрузки:             ║"
-echo "║  1. Настроить GRUB: nvidia_drm.modeset=1             ║"
-echo "║  2. pywal: pip install pywal (или walrs настроить)   ║"
-echo "║  3. Flatpak: flatpak install flathub ...             ║"
-echo "║  4. Проверить walrs / wal-smart функцию в fish       ║"
-echo "╚══════════════════════════════════════════════════════╝"
+echo "╔══════════════════════════════════════════════════════════╗"
+echo "║  ALL DONE!                                               ║"
+echo "║                                                          ║"
+echo "║  Manual steps after reboot:                             ║"
+echo "║  1. GRUB: add nvidia_drm.modeset=1                      ║"
+echo "║  2. mkinitcpio.conf: add nvidia modules, run mkinitcpio  ║"
+echo "║  3. Run: wal -i ~/wallpapers/yourwallpaper.png           ║"
+echo "║  4. Set saturation: nvibrant DVI-D-1 200                 ║"
+echo "╚══════════════════════════════════════════════════════════╝"
